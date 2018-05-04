@@ -1,0 +1,74 @@
+from PIL import Image
+import numpy as np
+from scipy import misc
+
+
+def arr2txt(arr, filename):
+    with open(filename, 'w') as txt:
+        for i in arr:
+            for j in i:
+                txt.write(str(j) + " ")
+            else:
+                txt.write("\n")
+
+
+def rgb2gray(rgb_arr):
+    return np.array(np.dot(rgb_arr[..., :3], [0.299, 0.587, 0.114]), dtype=np.uint8)
+
+
+def dilate(img_arr):
+    structuring_element = np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]], dtype=np.uint8)
+    dil_img = np.zeros(img_arr.shape, dtype=np.uint8)
+    for i in range(img_arr.shape[0]):
+        for j in range(img_arr.shape[1]):
+            if img_arr[i, j] == structuring_element[int(structuring_element.shape[0]/2), int(structuring_element.shape[1]/2)]:
+                try:
+                    dil_img[i-1, j-1] = 1
+                    dil_img[i-1, j] = 1
+                    dil_img[i-1, j+1] = 1
+                    dil_img[i, j-1] = 1
+                    dil_img[i, j] = 1
+                    dil_img[i, j+1] = 1
+                    dil_img[i+1, j-1] = 1
+                    dil_img[i+1, j] = 1
+                    dil_img[i+1, j+1] = 1
+                except IndexError:
+                    continue
+    else:
+        return dil_img
+
+
+def er(img_arr):
+    dil_img = np.zeros(img_arr.shape, dtype=np.uint8)
+    for i in range(img_arr.shape[0]):
+        for j in range(img_arr.shape[1]):
+            
+            try:
+                if img_arr[i-1, j-1] == 1 and img_arr[i-1, j] == 1 and img_arr[i-1, j+1] == 1 and img_arr[i, j-1] == 1 and img_arr[i, j] == 1 and img_arr[i, j+1] == 1 and img_arr[i+1, j-1] == 1 and img_arr[i+1, j] == 1 and img_arr[i+1, j+1] == 1:
+                    dil_img[i, j] = 1
+            except IndexError:
+                continue
+    else:
+        return dil_img
+
+
+def main():
+    with Image.open("input.png") as img:
+        arr = np.array(img.getdata(), np.uint8, copy=True).reshape(
+            img.size[1], img.size[0], 3)
+        gray_arr = rgb2gray(arr)
+        
+        monochrome = gray_arr < 127
+        monochrome = monochrome.astype(np.int)
+        misc.imsave("asd.png", monochrome)
+        print(arr2txt(monochrome, "asd.txt"))
+        misc.imsave("asd1.png", dilate(monochrome))
+        print(arr2txt(dilate(monochrome), "asd1.txt"))
+        
+
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n[!] Bye... bye.. ")
+
